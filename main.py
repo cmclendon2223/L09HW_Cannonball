@@ -5,6 +5,9 @@ import pandas as pd
 import streamlit as st
 import random
 
+class Print_Iface:
+    def update(self, x, y):
+        print(f"x={x:.2f}  y={y:.2f}")
 
 ## Represent a cannonball, tracking its position and velocity.
 #
@@ -17,6 +20,7 @@ class Cannonball:
         self._y = 0
         self._vx = 0
         self._vy = 0
+        self._iface = Print_Iface()  
 
     ## Move the cannon ball, using its current velocities.
     #  @param sec the amount of time that has elapsed.
@@ -58,8 +62,20 @@ class Cannonball:
             xs.append(self.getX())
             ys.append(self.getY())
             self.move(step, user_grav)
+            self._iface.update(self._x, self._y)
 
         return xs, ys
+
+class Crazyball(Cannonball):
+    def __init__(self, x):
+        super().__init__(x)
+
+    def move(self, sec, grav):
+        self.rand_q = random.randrange(0,10)
+        if self.getX() < 400:
+            self._y += (self.rand_q) * 0.4
+        super().move(sec, grav)
+
 
 def run_app():
     st.title("Cannonball Trajectory")
@@ -69,7 +85,7 @@ def run_app():
     )
     velocity = st.selectbox("Initial velocity", options=[15, 25, 40], index=1)
 
-    gravity_options = {"Earth": 9.81}
+    gravity_options = {"Earth": 9.81, "Moon" : 1.62, "Crazy" : 10}
     gravity_name = st.selectbox("Gravity", options=list(gravity_options.keys()), index=0)
     gravity = gravity_options[gravity_name]
     step = .1
@@ -79,7 +95,10 @@ def run_app():
 
     if simulate:
         angle_rad = radians(angle_deg)
-        ball = Cannonball(0)
+        if (gravity_name == "Crazy"):
+            ball = Crazyball(0)
+        else:
+            ball = Cannonball(0)
         xs, ys = ball.shoot(angle_rad, velocity, gravity, step)
 
         if not xs:
